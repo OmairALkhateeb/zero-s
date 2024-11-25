@@ -50,13 +50,9 @@ class GridGame:
 
 
     def bfs_check_visited(self, grid):
-        """
-         Performs a BFS-like check to see if the given grid configuration has been visited.
-        """
         # Convert the grid into a comparable form (tuple of tuples).
         grid_tuple = tuple(tuple(cell.content for cell in row) for row in grid)
 
-    # Use a queue to iterate over move history for BFS.
         queue = deque(self.moves_history.items())
 
         while queue:
@@ -108,7 +104,7 @@ class GridGame:
                     self.win_game((x2, y2), 2)
                 break
 
-        # Add next states to the queue
+        # next states to the queue
             self.next_state()   
             for next_state in self.next_state_list:
                 if next_state not in visited:
@@ -216,6 +212,61 @@ class GridGame:
 
         print("No solution found. Returning empty path.")
         return path
+
+
+
+    def re_DFS(self, current_state=None, visited=None, path=None):
+        if visited is None:
+            visited = []
+        if path is None:
+            path = []
+
+        if current_state is None:
+            current_state = self.grid
+            visited.append(current_state)
+
+        self.display_grid_noCommn(current_state, 'DFS')
+
+        x1, y1 = self.player_pos
+        x2, y2 = self.player2_pos
+
+    # Checking
+
+        if self.is_target((x1, y1), 1, is_test=False):
+            print(f"Player 1 reached the target at ({x1}, {y1}).")
+            self.update_grid(x1, y1, 1)
+            self.p1_won = True
+            if self.p2_won:
+                print("Both players have won! Ending game...")
+                self.win_game((x1, y1), 1)
+            return path + [current_state]
+
+        if self.is_target((x2, y2), 2, is_test=False):
+            print(f"Player 2 reached the target at ({x2}, {y2}).")
+            self.update_grid(x2, y2, 2)
+            self.p2_won = True
+            if self.p1_won:
+                print("Both players have won! Ending game...")
+                self.win_game((x2, y2), 2)
+            return path + [current_state]
+
+
+        path.append(current_state)
+
+        self.next_state()
+        for next_state in self.next_state_list:
+            if next_state not in visited:
+                print(f"Exploring new state: {next_state}")
+                visited.append(next_state)
+                result_path = self.DFS(next_state, visited, path)
+                if result_path:  
+                    return result_path
+            else:
+                print(f"State already visited: {next_state}")
+
+        print(f"Backtracking from state: {current_state}")
+        path.pop()
+        return []
 
 
         #####################################################################
