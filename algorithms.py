@@ -2,6 +2,7 @@ import heapq
 from collections import deque
 from grid_game import GridGame
 from queue import Queue
+from heuristics import heuristic  
 
 class GridGameAlgorithms(GridGame):
     def bfs_check_visited(self, grid):
@@ -225,3 +226,53 @@ class GridGameAlgorithms(GridGame):
     def calculate_move_cost(self, current_state, next_state):
         # Define the cost between current_state and next_state (e.g., 1 for simple moves)
         return 1
+
+
+
+
+    def astar(self):
+        priority_queue = []
+        visited = set()
+
+        # Initial state: g_cost = 0, f_cost = g_cost + heuristic
+        initial_heuristic = heuristic(self.grid, self.player_pos, 1)  # Assuming player 1 starts
+        heapq.heappush(priority_queue, (initial_heuristic, 0, self.grid, []))
+        
+        while priority_queue:
+            f_cost, g_cost, current_state, path = heapq.heappop(priority_queue)
+
+            # Convert grid state to tuple to check if visited
+            state_tuple = self.grid_to_tuple(current_state)
+            if state_tuple in visited:
+                continue
+            
+            visited.add(state_tuple)
+            path = path + [current_state]
+            self.display_grid_noCommn(current_state, 'A*')
+
+            # Check if either player has reached the target
+            x1, y1 = self.player_pos
+            if self.is_target((x1, y1), 1, is_test=False):
+                print(f"Player 1 reached the target at ({x1}, {y1}).")
+                self.update_grid(x1, y1, 1)
+                return path
+
+            x2, y2 = self.player2_pos
+            if self.is_target((x2, y2), 2, is_test=False):
+                print(f"Player 2 reached the target at ({x2}, {y2}).")
+                self.update_grid(x2, y2, 2)
+                return path
+
+            # Generate and explore next states with updated costs
+            self.next_state()
+            for next_state in self.next_state_list:
+                next_tuple = self.grid_to_tuple(next_state)
+                if next_tuple not in visited:
+                    move_cost = self.calculate_move_cost(current_state, next_state)
+                    new_g_cost = g_cost + move_cost
+                    heuristic_cost = heuristic(next_state, self.player_pos, 1)  # Use player-specific heuristic
+                    new_f_cost = new_g_cost + heuristic_cost
+                    heapq.heappush(priority_queue, (new_f_cost, new_g_cost, next_state, path))
+
+        print("No solution found. Returning empty path.")
+        return []
